@@ -1,0 +1,58 @@
+#include <iostream>
+
+using namespace std;
+
+struct number
+{
+    int up;
+    int down;
+};
+
+void nod (number& foo)
+{
+    int change = 0;
+    int division = 0;
+    int x = abs(foo.up);
+    int y = abs(foo.down);
+    while (y > 0)
+    {
+        if (y > x)
+        {
+            y = y % x;
+        }
+        else
+        {
+            change = x;
+            x = y;
+            y = change;
+            y = y % x;
+        }
+    }
+    foo.up = abs(foo.up)/x;
+    foo.down = abs(foo.down)/x;
+}
+
+int main()
+{
+    number fraction;
+    cout << "Введите числитель дроби: ";
+    cin >> fraction.up;
+    cout << endl << "Введите знаменатель дроби: ";
+    cin >> fraction.down;
+    if (fraction.up == 0 || fraction.down == 0)
+        cout << endl << "Сокращение данной дроби невозможно. Повторите попытку позже. ";
+    else
+    {
+        cout << "Исходная дробь: " << fraction.up << "/" << fraction.down;
+        if (fraction.up < 0 && fraction.down > 0 ||  fraction.up > 0 && fraction.down < 0)
+        {
+            nod (fraction);
+                        cout << endl << "Сокращение дроби: -" << abs(fraction.up) << "/" << abs(fraction.down);
+        }
+        else
+        {
+            nod (fraction);
+            cout << endl << "Сокращение дроби: " << abs(fraction.up) << "/" << abs(fraction.down);
+        }
+    }
+}
