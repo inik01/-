@@ -27,7 +27,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: "3.29.3"
           cache: true
 
       - name: Install dependencies
@@ -50,17 +49,21 @@ jobs:
 
   build-windows:
     name: Windows
-    runs-on: windows-latest
+    runs-on: windows-2022
     defaults:
       run:
         working-directory: ns_proxy
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: "3.29.3"
           cache: true
 
       - name: Install dependencies
@@ -83,6 +86,7 @@ jobs:
         shell: pwsh
         run: |
           $out = "build/windows-package"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
           Copy-Item -Recurse build/windows/x64/runner/Release/* $out/
           Compress-Archive -Path "$out/*" -DestinationPath build/ns-proxy-windows.zip -Force
 
@@ -108,7 +112,26 @@ jobs:
           name: NS Proxy ${{ github.ref_name }}
           draft: false
           prerelease: false
-          generate_release_notes: true
+          body: |
+            ## NS Proxy ${{ github.ref_name }}
+
+            VPN-клиент для VLESS ключей.
+
+            ### Скачать
+            | Файл | Платформа |
+            |------|-----------|
+            | `ns-proxy-android.apk` | Android |
+            | `ns-proxy-windows.zip` | Windows (ПК) |
+
+            ### Установка Android
+            1. Скачайте APK
+            2. Разрешите установку из неизвестных источников
+            3. Установите и разрешите VPN при подключении
+
+            ### Установка Windows
+            1. Распакуйте ZIP
+            2. Запустите `ns_proxy.exe`
+            3. Для VPN может потребоваться запуск от имени администратора
           files: |
             artifacts/ns-proxy-android/ns-proxy-android.apk
             artifacts/ns-proxy-windows/ns-proxy-windows.zip
