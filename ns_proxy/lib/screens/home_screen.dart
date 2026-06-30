@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/vpn_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import '../widgets/connect_button.dart';
 import '../widgets/glow_container.dart';
-import '../widgets/ns_logo.dart';
 import 'import_screen.dart';
 import 'servers_screen.dart';
 import 'settings_screen.dart';
@@ -57,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? FloatingActionButton.extended(
               onPressed: () => _openImport(context),
               icon: const Icon(Icons.add),
-              label: const Text('Добавить'),
+              label: Text('Добавить', style: AppTypography.body(size: 13)),
             )
           : null,
     );
@@ -78,8 +77,15 @@ class _ConnectTab extends StatelessWidget {
     return Consumer<VpnProvider>(
       builder: (context, vpn, _) {
         if (vpn.loading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.greenPrimary),
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(color: AppColors.greenPrimary),
+                const SizedBox(height: 16),
+                Text('Загрузка...', style: AppTypography.bodySmall()),
+              ],
+            ),
           );
         }
 
@@ -90,58 +96,37 @@ class _ConnectTab extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                const SizedBox(height: 24),
-                Text(
-                  'NS PROXY',
-                  style: GoogleFonts.orbitron(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.greenPrimary,
-                    letterSpacing: 4,
-                  ),
-                ),
                 const SizedBox(height: 32),
-                const NsLogo(size: 100),
-                const SizedBox(height: 40),
+                Text('NS PROXY', style: AppTypography.displayLarge()),
+                const SizedBox(height: 8),
+                Text(
+                  'VLESS VPN',
+                  style: AppTypography.label(color: AppColors.textMuted)
+                      .copyWith(letterSpacing: 2.5),
+                ),
+                const Spacer(),
                 ConnectButton(
                   state: vpn.connectionState,
                   busy: vpn.isBusy,
                   onPressed: server == null ? null : () => vpn.toggleConnection(),
                 ),
-                const SizedBox(height: 32),
+                const Spacer(),
                 if (server != null) ...[
                   GlowContainer(
                     active: vpn.isConnected,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.circle,
-                              size: 10,
-                              color: AppColors.greenPrimary,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                server.displayName,
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(server.displayName, style: AppTypography.title()),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${server.address}:${server.port}',
+                          style: AppTypography.mono(),
                         ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '${server.address}:${server.port}',
-                            style: GoogleFonts.inter(
-                              color: AppColors.textMuted,
-                              fontSize: 12,
-                            ),
-                          ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${server.security.toUpperCase()} · ${server.network.toUpperCase()}',
+                          style: AppTypography.bodySmall(),
                         ),
                       ],
                     ),
@@ -186,20 +171,12 @@ class _ConnectTab extends StatelessWidget {
                           size: 32,
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          'Добавьте VLESS ключ',
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        Text('Добавьте VLESS ключ', style: AppTypography.title()),
                         const SizedBox(height: 8),
                         Text(
-                          'Импортируйте ключ или подписку на вкладке «Серверы»',
+                          'Импортируйте ключ или ссылку на подписку',
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: AppColors.textMuted,
-                            fontSize: 13,
-                          ),
+                          style: AppTypography.bodySmall(),
                         ),
                         const SizedBox(height: 16),
                         OutlinedButton.icon(
@@ -215,9 +192,6 @@ class _ConnectTab extends StatelessWidget {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.greenPrimary,
                             side: const BorderSide(color: AppColors.greenPrimary),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
                           ),
                         ),
                       ],
@@ -231,29 +205,23 @@ class _ConnectTab extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: AppColors.error.withValues(alpha: 0.4),
                       ),
                     ),
                     child: Text(
                       vpn.error!,
-                      style: GoogleFonts.inter(
-                        color: AppColors.error,
-                        fontSize: 12,
-                      ),
+                      style: AppTypography.bodySmall(color: AppColors.error),
                     ),
                   ),
                 ],
-                const Spacer(),
+                const SizedBox(height: 24),
                 Text(
                   vpn.coreVersion != null
                       ? 'Xray ${vpn.coreVersion}'
-                      : 'NS Proxy v1.0.0',
-                  style: GoogleFonts.inter(
-                    color: AppColors.textMuted,
-                    fontSize: 11,
-                  ),
+                      : 'NS Proxy v1.0.4',
+                  style: AppTypography.mono(size: 10),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -282,29 +250,16 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
           Icon(icon, color: AppColors.greenPrimary, size: 18),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              color: AppColors.textMuted,
-              fontSize: 10,
-            ),
-          ),
+          Text(label, style: AppTypography.label(color: AppColors.textMuted)),
           const SizedBox(height: 2),
-          Text(
-            value,
-            style: GoogleFonts.orbitron(
-              color: AppColors.textPrimary,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(value, style: AppTypography.statValue()),
         ],
       ),
     );

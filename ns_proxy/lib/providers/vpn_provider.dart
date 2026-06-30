@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_vless/flutter_vless.dart';
 
 import '../models/server_profile.dart';
 import '../services/storage_service.dart';
+import '../services/subscription_service.dart';
 import '../services/vpn_service.dart';
 
 enum VpnConnectionState { disconnected, connecting, connected, disconnecting }
@@ -26,6 +29,9 @@ class VpnProvider extends ChangeNotifier {
   bool _loading = true;
   String? _error;
   String? _coreVersion;
+  Completer<bool>? _connectCompleter;
+
+  static const _statusWaitTimeout = Duration(seconds: 45);
 
   List<ServerProfile> get servers => List.unmodifiable(_servers);
   ServerProfile? get activeServer => _activeServer;
@@ -79,11 +85,20 @@ class VpnProvider extends ChangeNotifier {
       } else if (_servers.isNotEmpty) {
         _activeServer = _servers.first;
       }
-      _coreVersion = await _vpnService.coreVersion();
     } catch (e) {
-      _error = e.toString();
+      _error = _humanizeError(e);
     } finally {
       _loading = false;
+      notifyListeners();
+    }
+
+    _loadCoreVersion();
+  }
+
+  Future<void> _loadCoreVersion() async {
+    final version = await _vpnService.coreVersion();
+    if (version != null) {
+      _coreVersion = version;
       notifyListeners();
     }
   }
@@ -93,16 +108,28 @@ class VpnProvider extends ChangeNotifier {
     switch (status.connectionState) {
       case VlessConnectionState.connected:
         _connectionState = VpnConnectionState.connected;
+        _completeConnectWait(true);
       case VlessConnectionState.connecting:
         _connectionState = VpnConnectionState.connecting;
       case VlessConnectionState.disconnecting:
         _connectionState = VpnConnectionState.disconnecting;
       case VlessConnectionState.disconnected:
+        if (_connectCompleter != null &&
+            _connectionState == VpnConnectionState.connecting) {
+          _completeConnectWait(false);
+        }
         _connectionState = VpnConnectionState.disconnected;
       case VlessConnectionState.unknown:
         break;
     }
     notifyListeners();
+  }
+
+  void _completeConnectWait(bool success) {
+    final waiter = _connectCompleter;
+    if (waiter != null && !waiter.isCompleted) {
+      waiter.complete(success);
+    }
   }
 
   Future<void> setActiveServer(ServerProfile server) async {
@@ -113,9 +140,10 @@ class VpnProvider extends ChangeNotifier {
 
   Future<List<ServerProfile>> importFromText(String input) async {
     _error = null;
-    final imported = VpnService.parseInput(input);
+    final resolved = await SubscriptionService.resolve(input);
+    final imported = VpnService.parseInput(resolved);
     if (imported.isEmpty) {
-      throw Exception('Не найдено VLESS ключей');
+      throw Exception('Не найдено VLESS ключей в подписке');
     }
 
     final existingLinks = _servers.map((s) => s.shareLink).toSet();
@@ -161,14 +189,40 @@ class VpnProvider extends ChangeNotifier {
 
     _error = null;
     _connectionState = VpnConnectionState.connecting;
+    _connectCompleter = Completer<bool>();
     notifyListeners();
 
     try {
-      await _vpnService.connect(server, proxyOnly: _proxyOnly);
+      final fresh = VpnService.refreshProfile(server);
+      if (fresh.xrayConfig != server.xrayConfig) {
+        final index = _servers.indexWhere((s) => s.id == server.id);
+        if (index >= 0) {
+          _servers[index] = fresh;
+          _activeServer = fresh;
+          await _storage.saveServers(_servers);
+        }
+      }
+
+      await _vpnService.connect(fresh, proxyOnly: _proxyOnly);
+
+      if (_connectionState != VpnConnectionState.connected) {
+        final connected = await _connectCompleter!.future.timeout(
+          _statusWaitTimeout,
+          onTimeout: () => false,
+        );
+        if (!connected) {
+          await _vpnService.disconnect();
+          throw Exception(
+            'Не удалось подключиться. Проверьте ключ, интернет и разрешение VPN.',
+          );
+        }
+      }
     } catch (e) {
-      _error = e.toString();
+      _error = _humanizeError(e);
       _connectionState = VpnConnectionState.disconnected;
       notifyListeners();
+    } finally {
+      _connectCompleter = null;
     }
   }
 
@@ -178,7 +232,7 @@ class VpnProvider extends ChangeNotifier {
     try {
       await _vpnService.disconnect();
     } catch (e) {
-      _error = e.toString();
+      _error = _humanizeError(e);
     }
     _connectionState = VpnConnectionState.disconnected;
     notifyListeners();
@@ -198,7 +252,7 @@ class VpnProvider extends ChangeNotifier {
       }
       return ms;
     } catch (e) {
-      _error = e.toString();
+      _error = _humanizeError(e);
       notifyListeners();
       return null;
     }
@@ -223,5 +277,19 @@ class VpnProvider extends ChangeNotifier {
       return '${(bytesPerSecond / 1024).toStringAsFixed(1)} KB/s';
     }
     return '${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(1)} MB/s';
+  }
+
+  String _humanizeError(Object e) {
+    final text = e.toString();
+    if (text.contains('TimeoutException') || text.contains('Таймаут')) {
+      return 'Превышено время ожидания. Проверьте интернет и ключ.';
+    }
+    if (text.contains('permission') || text.contains('Разрешение VPN')) {
+      return 'Нужно разрешение VPN. Подтвердите запрос системы.';
+    }
+    if (text.contains('ArgumentError') || text.contains('invalid')) {
+      return 'Некорректный VLESS ключ. Проверьте формат.';
+    }
+    return text.replaceFirst('Exception: ', '');
   }
 }

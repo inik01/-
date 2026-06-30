@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/vpn_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 
 class ImportScreen extends StatefulWidget {
   const ImportScreen({super.key});
@@ -25,26 +26,21 @@ class _ImportScreenState extends State<ImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ИМПОРТ VLESS'),
-      ),
+      appBar: AppBar(title: const Text('ИМПОРТ VLESS')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Вставьте VLESS ключ или подписку',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
+              Text(
+                'VLESS ключ, подписка или ссылка',
+                style: AppTypography.body(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Поддерживаются: vless:// ссылки, base64 подписки, несколько ключей',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+              Text(
+                'vless:// · base64 · https://ссылка-на-подписку',
+                style: AppTypography.bodySmall(),
               ),
               const SizedBox(height: 20),
               Expanded(
@@ -53,11 +49,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   maxLines: null,
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTypography.mono(size: 12),
                   decoration: const InputDecoration(
                     hintText: 'vless://uuid@server:443?...',
                     alignLabelWithHint: true,
@@ -72,11 +64,6 @@ class _ImportScreenState extends State<ImportScreen> {
                       onPressed: _importing ? null : _pasteFromClipboard,
                       icon: const Icon(Icons.content_paste),
                       label: const Text('Вставить'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.greenPrimary,
-                        side: const BorderSide(color: AppColors.cardBorder),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -94,15 +81,7 @@ class _ImportScreenState extends State<ImportScreen> {
                               ),
                             )
                           : const Icon(Icons.download),
-                      label: Text(_importing ? 'Импорт...' : 'Импортировать'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.greenPrimary,
-                        foregroundColor: AppColors.background,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
+                      label: Text(_importing ? 'Загрузка...' : 'Импортировать'),
                     ),
                   ),
                 ],
@@ -124,7 +103,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> _import() async {
     final input = _controller.text.trim();
     if (input.isEmpty) {
-      _showError('Вставьте VLESS ключ');
+      _showError('Вставьте VLESS ключ или ссылку');
       return;
     }
 
@@ -144,7 +123,7 @@ class _ImportScreenState extends State<ImportScreen> {
         ),
       );
     } catch (e) {
-      _showError(e.toString());
+      _showError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _importing = false);
     }

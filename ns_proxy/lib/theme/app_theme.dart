@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_typography.dart';
 
 abstract final class AppTheme {
   static ThemeData get dark {
@@ -20,46 +21,45 @@ abstract final class AppTheme {
       ),
     );
 
+    final manrope = GoogleFonts.manropeTextTheme(base.textTheme).apply(
+      bodyColor: AppColors.textPrimary,
+      displayColor: AppColors.textPrimary,
+    );
+
     return base.copyWith(
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-      ),
+      textTheme: manrope,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.orbitron(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
+        titleTextStyle: AppTypography.displayMedium(
           color: AppColors.greenPrimary,
-          letterSpacing: 2,
-        ),
+        ).copyWith(fontSize: 17, letterSpacing: 2),
       ),
       cardTheme: CardThemeData(
         color: AppColors.surfaceElevated,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           side: const BorderSide(color: AppColors.cardBorder, width: 1),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
-        hintStyle: const TextStyle(color: AppColors.textMuted),
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        hintStyle: AppTypography.bodySmall(),
+        labelStyle: AppTypography.body(color: AppColors.textSecondary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: AppColors.cardBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: AppColors.cardBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           borderSide: const BorderSide(color: AppColors.greenPrimary, width: 2),
         ),
       ),
@@ -69,24 +69,22 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.surfaceElevated,
-        contentTextStyle: GoogleFonts.inter(color: AppColors.textPrimary),
+        contentTextStyle: AppTypography.body(),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           side: const BorderSide(color: AppColors.cardBorder),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.greenPrimary.withValues(alpha: 0.2),
+        indicatorColor: AppColors.greenPrimary.withValues(alpha: 0.15),
+        height: 64,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return GoogleFonts.inter(
-              color: AppColors.greenPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            );
+            return AppTypography.label(color: AppColors.greenPrimary)
+                .copyWith(fontSize: 11);
           }
-          return GoogleFonts.inter(color: AppColors.textMuted, fontSize: 12);
+          return AppTypography.bodySmall();
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -96,6 +94,21 @@ abstract final class AppTheme {
         }),
       ),
       dividerTheme: const DividerThemeData(color: AppColors.cardBorder),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          textStyle: AppTypography.button(color: AppColors.background),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          textStyle: AppTypography.body(
+            color: AppColors.greenPrimary,
+            size: 13,
+          ).copyWith(fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+      ),
     );
   }
 }

@@ -10,7 +10,9 @@ class VpnService {
   final FlutterVless _flutterVless;
   bool _initialized = false;
 
-  FlutterVless get core => _flutterVless;
+  static const _connectTimeout = Duration(seconds: 45);
+  static const _pingTimeout = Duration(seconds: 20);
+  static const _coreVersionTimeout = Duration(seconds: 8);
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -26,17 +28,26 @@ class VpnService {
 
   Future<void> connect(ServerProfile server, {bool proxyOnly = false}) async {
     await initialize();
+    final profile = refreshProfile(server);
+
     if (!proxyOnly) {
-      final granted = await requestPermission();
+      final granted = await requestPermission().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => false,
+      );
       if (!granted) {
-        throw Exception('VPN permission denied');
+        throw Exception('Разрешение VPN не получено');
       }
     }
+
     await _flutterVless.startVless(
-      remark: server.displayName,
-      config: server.xrayConfig,
+      remark: profile.displayName,
+      config: profile.xrayConfig,
       proxyOnly: proxyOnly,
       notificationDisconnectButtonName: 'ОТКЛЮЧИТЬ',
+    ).timeout(
+      _connectTimeout,
+      onTimeout: () => throw Exception('Таймаут запуска VPN'),
     );
   }
 
@@ -44,12 +55,36 @@ class VpnService {
 
   Future<int> ping(ServerProfile server) async {
     await initialize();
-    return _flutterVless.getServerDelay(config: server.xrayConfig);
+    final profile = refreshProfile(server);
+    return _flutterVless.getServerDelay(config: profile.xrayConfig).timeout(
+      _pingTimeout,
+      onTimeout: () => throw Exception('Таймаут пинга'),
+    );
   }
 
-  Future<int> pingConnected() => _flutterVless.getConnectedServerDelay();
+  Future<String?> coreVersion() async {
+    try {
+      return await _flutterVless
+          .getCoreVersion()
+          .timeout(_coreVersionTimeout);
+    } catch (e) {
+      debugPrint('coreVersion error: $e');
+      return null;
+    }
+  }
 
-  Future<String> coreVersion() => _flutterVless.getCoreVersion();
+  static ServerProfile refreshProfile(ServerProfile server) {
+    final parsed = parseSingle(server.shareLink);
+    if (parsed == null) return server;
+    return server.copyWith(
+      xrayConfig: parsed.xrayConfig,
+      address: parsed.address,
+      port: parsed.port,
+      security: parsed.security,
+      network: parsed.network,
+      name: parsed.name.isNotEmpty ? parsed.name : server.name,
+    );
+  }
 
   static List<ServerProfile> parseInput(String input) {
     final profiles = <ServerProfile>[];

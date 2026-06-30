@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../models/server_profile.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 
 class ServerTile extends StatelessWidget {
   const ServerTile({
@@ -28,7 +28,7 @@ class ServerTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(14),
@@ -36,7 +36,7 @@ class ServerTile extends StatelessWidget {
             color: selected
                 ? AppColors.greenPrimary.withValues(alpha: 0.08)
                 : AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(
               color: selected ? AppColors.greenPrimary : AppColors.cardBorder,
               width: selected ? 2 : 1,
@@ -49,7 +49,7 @@ class ServerTile extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: AppColors.cardBorder),
                 ),
                 child: const Icon(
@@ -67,19 +67,16 @@ class ServerTile extends StatelessWidget {
                       server.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                      style: AppTypography.title().copyWith(fontSize: 14),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${server.address}:${server.port} · ${server.security.toUpperCase()} · ${server.network.toUpperCase()}',
-                      style: GoogleFonts.inter(
-                        color: AppColors.textMuted,
-                        fontSize: 11,
-                      ),
+                      '${server.address}:${server.port}',
+                      style: AppTypography.mono(size: 11),
+                    ),
+                    Text(
+                      '${server.security.toUpperCase()} · ${server.network.toUpperCase()}',
+                      style: AppTypography.bodySmall(),
                     ),
                   ],
                 ),
@@ -89,10 +86,8 @@ class ServerTile extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
                     '${server.pingMs} ms',
-                    style: GoogleFonts.orbitron(
+                    style: AppTypography.statValue(
                       color: _pingColor(server.pingMs!),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

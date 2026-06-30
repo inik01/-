@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/vpn_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 import '../widgets/server_tile.dart';
 import 'import_screen.dart';
 
@@ -26,19 +27,13 @@ class _ServersScreenState extends State<ServersScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: Text(
-                  'Серверы',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
+                child: Text('Серверы', style: AppTypography.displayMedium()),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   '${vpn.servers.length} VLESS профилей',
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  style: AppTypography.bodySmall(),
                 ),
               ),
               const SizedBox(height: 16),
