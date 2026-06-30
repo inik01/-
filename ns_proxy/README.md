@@ -1,119 +1,65 @@
-# NS Proxy
+<div dir="ltr" align=center>
+    
+[**![Lang_farsi](https://user-images.githubusercontent.com/125398461/234186932-52f1fa82-52c6-417f-8b37-08fe9250a55f.png) فارسی**](README_fa.md) / [**Русский 🇷🇺**](README_ru.md) / [**简体中文 🇨🇳**](README_cn.md) / [**日本語 🇯🇵**](README_ja.md) / [**Portugês-BR 🇧🇷**](README_br.md)
 
-Кроссплатформенный VPN-клиент для **VLESS** ключей (Android и Windows). Тёмная тема с изумрудно-зелёными акцентами в стиле бренда NS Proxy.
+</div>
+<br>
 
-## Скачать готовое приложение
+<p align="center"><img src="assets/images/logo.svg" width=120 /></p>
 
-### Способ 1 — GitHub Releases (рекомендуется)
+<h1 align="center">NS Proxy</h1>
 
-1. Откройте страницу релизов: **https://github.com/inik01/-/releases**
-2. Скачайте нужный файл из последнего релиза:
+<p align="center">
+  <strong>Форк <a href="https://github.com/hiddify/hiddify-app">Hiddify</a> — мультиплатформенный прокси-клиент на Sing-box</strong>
+</p>
 
-| Файл | Платформа | Описание |
-|------|-----------|----------|
-| `app-release.apk` | Android | Установочный APK |
-| `ns-proxy-windows.zip` | Windows | Архив с `ns_proxy.exe` и `xray.exe` |
+<div align="center">
 
-### Способ 2 — Собрать вручную через GitHub Actions
+[![Downloads](https://img.shields.io/github/downloads/inik01/-/total?style=flat-square&logo=github)](https://github.com/inik01/-/releases)
+[![Last Release](https://img.shields.io/github/v/release/inik01/-?style=flat-square)](https://github.com/inik01/-/releases/latest)
 
-Если релиза ещё нет, можно запустить сборку сами:
+</div>
 
-1. Перейдите в **Actions** → **Build NS Proxy Release**
-2. Нажмите **Run workflow** → **Run workflow**
-3. После завершения откройте завершённый workflow
-4. Внизу страницы скачайте артефакты:
-   - `ns-proxy-android` — APK
-   - `ns-proxy-windows` — ZIP для Windows
+## Что такое NS Proxy?
 
-### Способ 3 — Собрать локально
+<p dir="ltr" style="font-size: 16px">NS Proxy — это ребрендинг открытого клиента Hiddify. Поддерживаются те же протоколы и функции: автовыбор узла, TUN, удалённые профили, подписки. Приложение бесплатное и с открытым исходным кодом.</p>
 
-```bash
-cd ns_proxy
-flutter pub get
-python3 tools/generate_icons.py
-dart run flutter_launcher_icons
-flutter build apk --release          # Android
-flutter build windows --release      # Windows
-```
+## Скачать
 
----
+**[Releases →](https://github.com/inik01/-/releases/latest)**
 
-## Установка
+| Платформа | Файлы |
+|-----------|-------|
+| Android | `NS-Proxy-Android-universal.apk` |
+| Windows | `NS-Proxy-Windows-Portable-x64.zip`, `NS-Proxy-Windows-Setup-x64.exe` |
+| iOS | `NS-Proxy-iOS.ipa` |
 
-### Android
+## Основные возможности
 
-1. Скачайте `app-release.apk`
-2. На телефоне разрешите установку из неизвестных источников
-3. Откройте APK и установите
-4. При первом подключении разрешите создание VPN-туннеля
+✈️ Android, iOS, Windows, macOS, Linux
 
-### Windows
+⭐ Удобный интерфейс
 
-1. Скачайте и распакуйте `ns-proxy-windows.zip`
-2. Запустите `ns_proxy.exe`
-3. Для VPN-режима может потребоваться запуск **от имени администратора**
-4. В архиве уже есть `xray/xray.exe` — отдельно ничего скачивать не нужно
+🔍 Выбор узла по задержке
 
----
+🟡 Vless, Vmess, Reality, TUIC, Hysteria, Wireguard, SSH и др.
 
-## Использование
+🔄 Автообновление подписок
 
-1. Откройте вкладку **Серверы** → **Добавить**
-2. Вставьте VLESS ключ или подписку
-3. Выберите сервер из списка
-4. На главной вкладке нажмите **ПОДКЛЮЧИТЬ**
+🛡 Открытый исходный код (форк Hiddify)
 
-### Формат VLESS ключа
+🌙 Тёмная и светлая темы
 
-```
-vless://UUID@ADDRESS:PORT?security=reality&type=tcp&flow=xtls-rprx-vision&sni=...&fp=...&pbk=...&sid=...#ИмяСервера
-```
-
----
-
-## Возможности
-
-- Импорт VLESS ключей (`vless://...`)
-- Импорт подписок (base64, несколько ключей)
-- VPN-туннель и режим «только прокси»
-- Список серверов с выбором активного
-- Пинг серверов
-- Кастомная иконка NS Proxy
-- Поддержка Reality, XTLS, WebSocket, gRPC, TCP и других транспортов Xray
-
-## Платформы
-
-| Платформа | Статус |
-|-----------|--------|
-| Android   | Полная поддержка VPN |
-| Windows   | VPN и прокси |
-
-## Иконка приложения
-
-Иконка генерируется из логотипа NS (чёрный фон, зелёный монограммный знак):
+## Сборка
 
 ```bash
-python3 tools/generate_icons.py
-dart run flutter_launcher_icons
+make android-apk-prepare && make android-apk-release
+make windows-prepare && make windows-release
+make ios-prepare && make ios-release   # macOS + Apple Developer
 ```
 
-## Технологии
-
-- **Flutter** — UI для Android и Windows
-- **flutter_vless** — парсинг VLESS и Xray VPN ядро
-- **Provider** — управление состоянием
-
-## Публикация релиза (для разработчиков)
-
-Чтобы опубликовать новую версию на GitHub Releases:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-GitHub Actions автоматически соберёт APK и Windows ZIP и опубликует их в Releases.
+Flutter **3.38.5** — см. `pubspec.yaml`.
 
 ## Лицензия
 
-MIT
+Hiddify Extended GPL v3. Атрибуция оригинальному проекту Hiddify обязательна. См. [LICENSE.md](LICENSE.md).

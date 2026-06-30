@@ -1,4 +1,4 @@
-name: Build NS Proxy Release
+name: NS Proxy Release
 
 on:
   push:
@@ -8,6 +8,15 @@ on:
 
 permissions:
   contents: write
+
+env:
+  IS_GITHUB_ACTIONS: 1
+  CHANNEL: prod
+  FLUTTER_VERSION: '3.38.5'
+  TARGET_NAME_apk: NS-Proxy-Android
+  TARGET_NAME_zip: NS-Proxy-Windows-Portable-x64
+  TARGET_NAME_exe: NS-Proxy-Windows-Setup-x64
+  TARGET_NAME_ipa: NS-Proxy-iOS
 
 jobs:
   build-android:
@@ -19,95 +28,161 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Free disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          rm -rf ~/.gradle/caches || true
+          sudo apt-get autoremove -y && sudo apt-get clean
+          df -h
+
       - uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: zulu
           java-version: '17'
+
+      - uses: android-actions/setup-android@v3
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install build dependencies
+        run: |
+          make android-apk-install-deps
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
 
-      - name: Accept Android licenses
-        run: yes | flutter doctor --android-licenses || true
+      - name: Prepare Android build
+        run: make android-apk-prepare
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build Android APK
+        run: make android-apk-release
 
-      - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/ns-proxy-android.apk
+      - name: Collect APK artifacts
+        run: |
+          mkdir -p out
+          cp ./build/app/outputs/flutter-apk/*arm64-v8a*.apk out/${TARGET_NAME_apk}-arm64.apk 2>/dev/null || true
+          cp ./build/app/outputs/flutter-apk/*armeabi-v7a*.apk out/${TARGET_NAME_apk}-arm7.apk 2>/dev/null || true
+          cp ./build/app/outputs/flutter-apk/*x86_64*.apk out/${TARGET_NAME_apk}-x86_64.apk 2>/dev/null || true
+          cp ./build/app/outputs/flutter-apk/app-release.apk out/${TARGET_NAME_apk}-universal.apk
+          ls -la out/
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: ns-proxy-android
-          path: ns_proxy/build/app/outputs/flutter-apk/ns-proxy-android.apk
+          name: android-apk
+          path: ns_proxy/out/*.apk
 
   build-windows:
     name: Windows
-    runs-on: windows-2022
+    runs-on: windows-latest
     defaults:
       run:
         working-directory: ns_proxy
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build Windows release
-        run: flutter build windows --release
-
-      - name: Download Xray for Windows
+      - name: Install build dependencies
         shell: pwsh
         run: |
-          $xrayVersion = "25.6.8"
-          $zipUrl = "https://github.com/XTLS/Xray-core/releases/download/v${xrayVersion}/Xray-windows-64.zip"
-          Invoke-WebRequest -Uri $zipUrl -OutFile xray.zip
-          Expand-Archive -Path xray.zip -DestinationPath xray-temp -Force
-          New-Item -ItemType Directory -Force -Path build/windows-package/xray | Out-Null
-          Copy-Item xray-temp/xray.exe build/windows-package/xray/xray.exe
+          make windows-install-deps
+          echo "$env:USERPROFILE\.pub-cache\bin" >> $env:GITHUB_PATH
 
-      - name: Package Windows release
+      - name: Prepare Windows build
+        run: make windows-prepare
+
+      - name: Build Windows portable and installer
+        run: make windows-zip-release windows-exe-release
+
+      - name: Collect Windows artifacts
         shell: pwsh
         run: |
-          $out = "build/windows-package"
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-          Copy-Item -Recurse build/windows/x64/runner/Release/* $out/
-          Compress-Archive -Path "$out/*" -DestinationPath build/ns-proxy-windows.zip -Force
+          New-Item -ItemType Directory -Path out -Force | Out-Null
+          $targets = @('zip', 'exe')
+          foreach ($ext in $targets) {
+            $key = "TARGET_NAME_$ext"
+            $targetName = (Get-Item "env:$key").Value
+            $files = Get-ChildItem -Path dist -Recurse -Filter "*.$ext" -ErrorAction SilentlyContinue
+            foreach ($file in $files) {
+              $destination = Join-Path -Path out -ChildPath "$targetName.$ext"
+              Move-Item -Path $file.FullName -Destination $destination -Force
+            }
+          }
+          Get-ChildItem -Path out
 
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: ns-proxy-windows
-          path: ns_proxy/build/ns-proxy-windows.zip
+          name: windows
+          path: ns_proxy/out/*
+
+  build-ios:
+    name: iOS IPA
+    runs-on: macos-15
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: ns_proxy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Import Apple codesign certificates
+        if: false
+        uses: apple-actions/import-codesign-certs@v6
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_P12_PASSWORD }}
+
+      - name: Install build dependencies
+        run: |
+          make ios-install-deps
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Prepare iOS build
+        run: make ios-prepare
+
+      - name: Build iOS IPA
+        run: make ios-release
+
+      - name: Collect iOS artifact
+        run: |
+          mkdir -p out
+          mv dist/*/*.ipa out/${TARGET_NAME_ipa}.ipa 2>/dev/null || cp dist/*/*.ipa out/${TARGET_NAME_ipa}.ipa
+          ls -la out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          path: ns_proxy/out/*.ipa
+          if-no-files-found: ignore
 
   release:
     name: Publish GitHub Release
-    needs: [build-android, build-windows]
+    needs: [build-android, build-windows, build-ios]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: List release files
+        run: find artifacts -type f
+
+      - uses: softprops/action-gh-release@v2
         with:
           name: NS Proxy ${{ github.ref_name }}
           draft: false
@@ -115,25 +190,30 @@ jobs:
           body: |
             ## NS Proxy ${{ github.ref_name }}
 
-            VPN-клиент для VLESS ключей.
+            Форк [Hiddify](https://github.com/hiddify/hiddify-app) с тем же функционалом: VLESS, VMess, Reality, подписки, TUN и др.
 
             ### Скачать
-            | Файл | Платформа |
-            |------|-----------|
-            | `ns-proxy-android.apk` | Android |
-            | `ns-proxy-windows.zip` | Windows (ПК) |
 
-            ### Установка Android
+            | Платформа | Файл |
+            |-----------|------|
+            | Android | `NS-Proxy-Android-universal.apk` (или arm64/arm7) |
+            | Windows | `NS-Proxy-Windows-Portable-x64.zip` или `NS-Proxy-Windows-Setup-x64.exe` |
+            | iOS | `NS-Proxy-iOS.ipa` (требует подписи для установки) |
+
+            ### Android
             1. Скачайте APK
             2. Разрешите установку из неизвестных источников
-            3. Установите и разрешите VPN при подключении
+            3. Импортируйте VLESS-ключ или подписку
 
-            ### Установка Windows
-            1. Распакуйте ZIP
-            2. Запустите `ns_proxy.exe`
-            3. Для VPN может потребоваться запуск от имени администратора
-          files: |
-            artifacts/ns-proxy-android/ns-proxy-android.apk
-            artifacts/ns-proxy-windows/ns-proxy-windows.zip
+            ### Windows
+            1. Portable: распакуйте ZIP и запустите приложение
+            2. Installer: запустите `.exe`
+
+            ### iOS
+            Сборка IPA требует Apple Developer сертификаты. Для установки на устройство используйте AltStore, Sideloadly или TestFlight (при наличии подписи).
+
+            ---
+            Based on Hiddify (GPL v3). See [LICENSE](https://github.com/inik01/-/blob/master/ns_proxy/LICENSE.md).
+          files: artifacts/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
