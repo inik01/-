@@ -1,8 +1,10 @@
+
 # Miscellaneous
 *.class
 *.log
 *.pyc
 *.swp
+.sentry-native
 .DS_Store
 .atom/
 .build/
@@ -11,7 +13,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-
+.github/help
 # IntelliJ related
 *.iml
 *.ipr
@@ -29,9 +31,24 @@ migrate_working_dir/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
 /build/
+
+# generated files
+**/*.g.dart
+**/*.freezed.dart
+**/*.mapper.dart
+**/*.gen.dart
+**/*.dll
+**/*.dylib
+**/*.xcframework
+/dist/
+/dist_docker/
+
+/assets/core/*
+!/assets/core/.gitkeep
 
 # Symbolication related
 app.*.symbols
@@ -43,3 +60,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+/data
+.cxx
+
+# Windows Self-Signed for msix
+windows/sign.pfx
+windows/sign.cer
+.aider.input.history
+.aider.chat.history.md
+.aider.tags.cache.v4
