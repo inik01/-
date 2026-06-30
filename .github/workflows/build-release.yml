@@ -30,10 +30,7 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        run: |
-          flutter pub get
-          python3 tools/generate_icons.py
-          dart run flutter_launcher_icons
+        run: flutter pub get
 
       - name: Accept Android licenses
         run: yes | flutter doctor --android-licenses || true
@@ -41,11 +38,14 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/ns-proxy-android.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ns-proxy-android
-          path: ns_proxy/build/app/outputs/flutter-apk/app-release.apk
+          path: ns_proxy/build/app/outputs/flutter-apk/ns-proxy-android.apk
 
   build-windows:
     name: Windows
@@ -62,10 +62,7 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        run: |
-          flutter pub get
-          python tools/generate_icons.py
-          dart run flutter_launcher_icons
+        run: flutter pub get
 
       - name: Build Windows release
         run: flutter build windows --release
@@ -111,7 +108,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            artifacts/ns-proxy-android/app-release.apk
+            artifacts/ns-proxy-android/ns-proxy-android.apk
             artifacts/ns-proxy-windows/ns-proxy-windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

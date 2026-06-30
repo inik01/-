@@ -37,7 +37,7 @@ abstract final class AppTheme {
           letterSpacing: 2,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surfaceElevated,
         elevation: 0,
         shape: RoundedRectangleBorder(
