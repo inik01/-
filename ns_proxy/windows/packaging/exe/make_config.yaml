@@ -3,7 +3,7 @@ publisher: NS Proxy
 publisher_url: https://github.com/hiddify/hiddify-app
 display_name: NS Proxy
 create_desktop_icon: true
-install_dir_name: "{autopf64}\\NS Proxy"
+install_dir_name: "{autopf64}\\NSProxy"
 setup_icon_file: windows\runner\resources\app_icon.ico
 locales:
   - ar

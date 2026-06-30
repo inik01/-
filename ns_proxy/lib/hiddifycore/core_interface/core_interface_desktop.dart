@@ -29,13 +29,15 @@ class CoreInterfaceDesktop extends CoreInterface with InfraLogger {
     String fullPath = "";
     if (Platform.environment.containsKey('FLUTTER_TEST')) {
       fullPath = "hiddify-core";
-    }
-    if (Platform.isWindows) {
-      fullPath = p.join(fullPath, "hiddify-core.dll");
-    } else if (Platform.isMacOS) {
-      fullPath = p.join(fullPath, "hiddify-core.dylib");
-    } else {
-      fullPath = p.join(fullPath, "hiddify-core.so");
+    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      final exeDir = File(Platform.resolvedExecutable).parent.path;
+      if (Platform.isWindows) {
+        fullPath = p.join(exeDir, "hiddify-core.dll");
+      } else if (Platform.isMacOS) {
+        fullPath = p.join(exeDir, "hiddify-core.dylib");
+      } else {
+        fullPath = p.join(exeDir, "hiddify-core.so");
+      }
     }
 
     _logger.debug('hiddify-core native libs path: "$fullPath"');

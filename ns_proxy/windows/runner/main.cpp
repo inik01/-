@@ -7,6 +7,24 @@
 #include "app_links/app_links_plugin_c_api.h"
 // #include <protocol_handler_windows/protocol_handler_windows_plugin_c_api.h>
 
+namespace {
+
+void SetWorkingDirectoryToExecutable() {
+  wchar_t path[MAX_PATH];
+  const DWORD length = ::GetModuleFileNameW(nullptr, path, MAX_PATH);
+  if (length == 0 || length >= MAX_PATH) {
+    return;
+  }
+  wchar_t* last_slash = wcsrchr(path, L'\\');
+  if (last_slash == nullptr) {
+    return;
+  }
+  *last_slash = L'\0';
+  ::SetCurrentDirectoryW(path);
+}
+
+}  // namespace
+
 bool SendAppLinkToInstance(const std::wstring &title)
 {
   // Find our exact window
@@ -48,6 +66,7 @@ bool SendAppLinkToInstance(const std::wstring &title)
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command)
 {
+  SetWorkingDirectoryToExecutable();
 
   // Replace "example" with the generated title found as parameter of `window.Create` in this file.
   // You may ignore the result if you need to create another window.

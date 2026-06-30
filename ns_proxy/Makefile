@@ -301,11 +301,11 @@ windows-zip-release:
 	$(YELLOW)Post-processing Windows portable$(DONE); \
 	cd "$$ZIP_DIR"; \
 	$(BLUE)Extracting and Repacking...$(DONE); \
-	mkdir -p "NS Proxy"; \
-	unzip -q "$$ZIP_FILE" -d "NS Proxy/"; \
+	mkdir -p NSProxy; \
+	unzip -q "$$ZIP_FILE" -d NSProxy/; \
 	rm "$$ZIP_FILE"; \
-	tar -a -cf "$$FILE_NAME.zip" "NS Proxy"; \
-	rm -rf "NS Proxy"; \
+	tar -a -cf "$$FILE_NAME.zip" NSProxy; \
+	rm -rf NSProxy; \
 	$(GREEN)Successful$(DONE)
 
 windows-exe-release:

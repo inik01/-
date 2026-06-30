@@ -206,7 +206,7 @@ jobs:
             | Платформа | Файл |
             |-----------|------|
             | Android | `NS-Proxy-Android-universal.apk` (или arm64/arm7) |
-            | Windows | `NS-Proxy-Windows-Portable-x64.zip` или `NS-Proxy-Windows-Setup-x64.exe` |
+            | Windows | `NS-Proxy-Windows-Portable-x64.zip` → запускайте **NSProxy.exe** |
             | iOS | `NS-Proxy-iOS.ipa` (требует подписи для установки) |
 
             ### Android
@@ -215,8 +215,8 @@ jobs:
             3. Импортируйте VLESS-ключ или подписку
 
             ### Windows
-            1. Portable: распакуйте ZIP и запустите приложение
-            2. Installer: запустите `.exe`
+            1. Portable: распакуйте ZIP и запустите **NSProxy.exe** (не `hiddify-core.dll` и не `HiddifyCli.exe`)
+            2. Installer: запустите `.exe`, затем ярлык **NS Proxy**
 
             ### iOS
             Сборка IPA требует Apple Developer сертификаты. Для установки на устройство используйте AltStore, Sideloadly или TestFlight (при наличии подписи).

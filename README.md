@@ -18,7 +18,7 @@
 | Платформа | Файл |
 |-----------|------|
 | Android | `NS-Proxy-Android-universal.apk` |
-| Windows | `NS-Proxy-Windows-Portable-x64.zip` или `NS-Proxy-Windows-Setup-x64.exe` |
+| Windows | `NS-Proxy-Windows-Portable-x64.zip` → **NSProxy.exe** или installer `.exe` |
 | iOS | `NS-Proxy-iOS.ipa` (нужна подпись для установки) |
 
 ## Сборка из исходников
